@@ -34,6 +34,12 @@ The cais tool requires:
 https://github.com/davidecenzato/cais.git
 cd cais
 git submodule update --init --recursive
+
+cd external/sdsl-lite
+mkdir installed
+./install.sh installed/
+
+cd ../../
 make
 ```
 

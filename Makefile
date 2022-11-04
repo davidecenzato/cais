@@ -1,5 +1,5 @@
 # compilation flags
-CXX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -g
+CXX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -g -I external/sdsl-lite/include -L external/sdsl-lite/lib
 #CXX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -fsanitize=address -fno-omit-frame-pointer -g
 CFLAGS=-O3 -Wall -std=c99 -g
 CC=gcc

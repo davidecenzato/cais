@@ -35,7 +35,7 @@ void print_help(char** argv) {
         << "\t-q \ttake in input a fastq file (only for eBWT and dolEBWT), def. False " << std::endl 
         //<< "\t-n \ttake in input a new line sep file, def. False " << std::endl to be implemented 
         << "\t-s \twrite the conjugate array, def. False " << std::endl
-        << "\t-v \tser verbose mode, def. False " << std::endl
+        << "\t-v \tset verbose mode, def. False " << std::endl
         << "\t-o O\tbasename for the output files, def. <input filename>" << std::endl;
 
   exit(-1);
