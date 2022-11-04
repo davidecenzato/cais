@@ -31,7 +31,7 @@ The cais tool requires:
 ### Download and Compile
 
 ```console
-https://github.com/davidecenzato/cais.git
+git clone https://github.com/davidecenzato/cais.git
 cd cais
 git submodule update --init --recursive
 
