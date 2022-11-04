@@ -24,7 +24,6 @@ When computing the BWT and the BBWT the input is taken as a single text.
 
 The cais tool requires:
 * A modern C++11 compiler such as `g++` version 4.9 or higher.
-* The sdsl-lite library installed.
 
 # Example
 

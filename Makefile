@@ -1,8 +1,5 @@
 # compilation flags
-CXX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -g -I external/sdsl-lite/include -L external/sdsl-lite/lib
-#CXX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -fsanitize=address -fno-omit-frame-pointer -g
-CFLAGS=-O3 -Wall -std=c99 -g
-CC=gcc
+CCX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -g -I external/sdsl-lite/installed/include -L external/sdsl-lite/installed/lib
 CCX=g++
 
 # main executables 
@@ -14,16 +11,16 @@ EXECS = cais cais64
 all: $(EXECS)
 
 lib/cais32.o: lib/cais.cpp lib/cais.h
-	$(CCX) $(CXX_FLAGS) -c -o $@ $< -lsdsl -ldivsufsort -ldivsufsort64
+	$(CCX) $(CCX_FLAGS) -c -o $@ $< -lsdsl -ldivsufsort -ldivsufsort64
 
 lib/cais64.o: lib/cais.cpp lib/cais.h
-	$(CCX) $(CXX_FLAGS) -c -o $@ $< -lsdsl -ldivsufsort -ldivsufsort64 -DM64
+	$(CCX) $(CCX_FLAGS) -c -o $@ $< -lsdsl -ldivsufsort -ldivsufsort64 -DM64
 
 cais: main.cpp IOfunc.hpp BWTalgos.cpp external/malloc_count/malloc_count.o lib/cais32.o 
-	$(CXX) $(CXX_FLAGS) -o $@ main.cpp IOfunc.hpp BWTalgos.cpp external/malloc_count/malloc_count.o lib/cais32.o -ldl -lsdsl -ldivsufsort -ldivsufsort64
+	$(CCX) $(CCX_FLAGS) -o $@ main.cpp IOfunc.hpp BWTalgos.cpp external/malloc_count/malloc_count.o lib/cais32.o -ldl -lsdsl -ldivsufsort -ldivsufsort64
 
 cais64: main.cpp IOfunc.hpp BWTalgos.cpp external/malloc_count/malloc_count.o lib/cais64.o 
-	$(CXX) $(CXX_FLAGS) -o $@ main.cpp IOfunc.hpp BWTalgos.cpp external/malloc_count/malloc_count.o lib/cais64.o -ldl -lsdsl -ldivsufsort -ldivsufsort64 -DM64
+	$(CCX) $(CCX_FLAGS) -o $@ main.cpp IOfunc.hpp BWTalgos.cpp external/malloc_count/malloc_count.o lib/cais64.o -ldl -lsdsl -ldivsufsort -ldivsufsort64 -DM64
 
 clean:
-	rm -f $(EXECS) $(EXECS_NT) lib/*.o  
+	rm -f $(EXECS) lib/*.o  
