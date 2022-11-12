@@ -14,8 +14,9 @@ or the conjugate array of a text
    Proc. of SPIRE '21, doi = {10.1007/978-3-030-86692-1\_11}
    
 The input file cannot contain the characters < 2 which are used internally by the algorithm.
-Input file smaller than 4.29 GB will take 5n + n/8 bytes in RAM, while input files larger than
-4.29 GB will take 9n + n/8 bytes.
+Input file smaller than 4.29 GB will take 5n bytes in RAM for the Text and CA plus the overhead
+for storing the string boundaries with the sdsl 'sd_vector' compressed bitvector implementation.
+The files larger than 4.29 GB will take 9n bytes plus the overhead for the bitvector.
 */
 
 // algorithms for computing different BWT variants

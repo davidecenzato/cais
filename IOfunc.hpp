@@ -33,7 +33,7 @@ void load_fasta(const char *filename, std::vector<uint8_t>& Text, std::vector<ui
         // if we are in 32 bit mode, check that parse has less than 2^32-2 words
         if(Text.size() > pow(2,32) - 1){ 
             // the input file is too big
-            std::cerr << "Error, the file size is > 4.29 GB, please use ./bwtvartool64. exiting..." << std::endl;
+            std::cerr << "Error, the file size is > 4.29 GB, please use ./cais64. exiting..." << std::endl;
             exit(-1);
         }
     #endif 
@@ -100,7 +100,7 @@ void load_fastq(const char *filename, std::vector<uint8_t>& Text, std::vector<ui
         // if we are in 32 bit mode, check that parse has less than 2^32-2 words
         if(Text.size() > pow(2,32) - 1){ 
             // the input file is too big
-            std::cerr << "Error, the file size is > 4.29 GB, please use ./bwtvartool64. exiting..." << std::endl;
+            std::cerr << "Error, the file size is > 4.29 GB, please use ./cais64. exiting..." << std::endl;
             exit(-1);
         }
     #endif 
@@ -171,7 +171,7 @@ void load_fasta_conc(const char *filename, std::vector<uint8_t>& Text, uint_s& s
         // if we are in 32 bit mode, check that parse has less than 2^32-2 words
         if(Text.size() > pow(2,32) - 1){ 
             // the input file is too big
-            std::cerr << "Error, the file size is > 4.29 GB, please use ./bwtvartool64. exiting..." << std::endl;
+            std::cerr << "Error, the file size is > 4.29 GB, please use ./cais64. exiting..." << std::endl;
             exit(-1);
         }
     #endif 
@@ -231,7 +231,7 @@ void load_fastq_conc(const char *filename, std::vector<uint8_t>& Text, uint_s& s
         // if we are in 32 bit mode, check that parse has less than 2^32-2 words
         if(Text.size() > pow(2,32) - 1){ 
             // the input file is too big
-            std::cerr << "Error, the file size is > 4.29 GB, please use ./bwtvartool64. exiting..." << std::endl;
+            std::cerr << "Error, the file size is > 4.29 GB, please use ./cais64. exiting..." << std::endl;
             exit(-1);
         }
     #endif 
