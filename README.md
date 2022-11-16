@@ -74,16 +74,6 @@ If you use this tool in an academic setting, please cite the following paper, in
       year      = {2021}
     }
 
-# Authors
-
-### Theoretical results:
-
-* Christina Boucher
-* Davide Cenzato
-* Zsuzsanna Lipták
-* Massimiliano Rossi
-* Marinella Sciortino
-
 ### Implementation:
 
 * [Davide Cenzato](https://github.com/davidecenzato) 
