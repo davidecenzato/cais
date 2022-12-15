@@ -17,8 +17,10 @@
 // alphabet size
 const int alph_size = 128;
 
-void compute_ebwt(Args arg, bool concat);
+void compute_ebwt_sparse(Args arg, bool concat);
+void compute_ebwt_plain(Args arg, bool concat);
 void compute_bwt_wo_dol(Args arg);
-void compute_bbwt(Args arg);
+void compute_bbwt_sparse(Args arg);
+void compute_bbwt_plain(Args arg);
 
 #endif

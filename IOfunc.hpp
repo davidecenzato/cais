@@ -11,6 +11,8 @@ struct Args {
   int format = 0; // input file format: 1 fasta | 2 fastq | 0 txt
   int variant = -1; // bwt variant: 0 ebwt | 1 dolEbwt | 2 BWTwo$ | 3 BBWT
   bool ca = false; // write conjugate array 
+  bool sparse = false; // use sparse bitvector 
+  bool doc = false; // write the document array 
   bool verbose = false; // verbosity level
 };
 
@@ -291,9 +293,7 @@ void load_text(const char *filename, std::vector<uint8_t>& Text, uint_s& size){
     // resize the input vector
     input.seekg(0, std::ios::end);
     size = input.tellg();
-    std::cout << size << std::endl;
     Text.resize(size);
-    std::cout << size << std::endl;
     input.seekg(0, std::ios::beg);
     // check input file size
     #if M64 == 0

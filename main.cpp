@@ -15,7 +15,7 @@ or the conjugate array of a text
    
 The input file cannot contain the characters < 2 which are used internally by the algorithm.
 Input file smaller than 4.29 GB will take 5n bytes in RAM for the Text and CA plus the overhead
-for storing the string boundaries with the sdsl 'sd_vector' compressed bitvector implementation.
+for storing the string boundaries with the sdsl bit vector.
 The files larger than 4.29 GB will take 9n bytes plus the overhead for the bitvector.
 */
 
@@ -34,8 +34,10 @@ void print_help(char** argv) {
         << "\t-t \tconstruct the bijective BWT (BBWT), def. False " << std::endl
         << "\t-f \ttake in input a fasta file (only for eBWT and dolEBWT), def. True " << std::endl
         << "\t-q \ttake in input a fastq file (only for eBWT and dolEBWT), def. False " << std::endl 
+        << "\t-s \tuse sparse bitvector (less space with long strings), def. False " << std::endl 
         //<< "\t-n \ttake in input a new line sep file, def. False " << std::endl to be implemented 
-        << "\t-s \twrite the conjugate array, def. False " << std::endl
+        << "\t-c \twrite the conjugate array, def. False " << std::endl
+        << "\t-a \twrite the document array (only for eBWT and dolEBWT), def. False " << std::endl 
         << "\t-v \tset verbose mode, def. False " << std::endl
         << "\t-o O\tbasename for the output files, def. <input filename>" << std::endl;
 
@@ -52,7 +54,7 @@ void parseArgs( int argc, char** argv, Args& arg ) {
   puts("");
  
   std::string sarg;
-  while ((c = getopt( argc, argv, "edbtfqso:vh") ) != -1) {
+  while ((c = getopt( argc, argv, "edbtfqscao:vh") ) != -1) {
     switch(c) {
       case 'e':
         arg.variant = 0; break;
@@ -76,8 +78,14 @@ void parseArgs( int argc, char** argv, Args& arg ) {
         arg.verbose = true; break;
         // verbose mode
       case 's':
+        arg.sparse = true; break;
+        // use sparse bitvector
+      case 'c':
         arg.ca = true; break;
-        // write the suffix array
+        // write the conjugate array
+      case 'a':
+        arg.doc = true; break;
+        // write the document array
       case 'o':
         sarg.assign( optarg );
         arg.outname.assign( sarg ); break;
@@ -125,11 +133,13 @@ int main(int argc, char** argv)
   switch(arg.variant) {
     case 0:
       if(arg.verbose) std::cout << "Computing the eBWT of: " << arg.filename << std::endl;
-      compute_ebwt(arg, false);
+      if(arg.sparse){ compute_ebwt_sparse(arg, false); }
+      else{ compute_ebwt_plain(arg, false); }
       break;
     case 1:
       if(arg.verbose) std::cout << "Computing the dollar eBWT of: " << arg.filename << std::endl;
-      compute_ebwt(arg, true);
+      if(arg.sparse){ compute_ebwt_sparse(arg, true); }
+      else{ compute_ebwt_plain(arg, true); }
       break;
     case 2:
       if(arg.verbose) std::cout << "Computing the BWT of: " << arg.filename << std::endl;
@@ -137,7 +147,8 @@ int main(int argc, char** argv)
       break;
     case 3:
       if(arg.verbose) std::cout << "Computing the BBWT of: " << arg.filename << std::endl;
-      compute_bbwt(arg);
+      if(arg.sparse){ compute_bbwt_sparse(arg); }
+      else{ compute_bbwt_plain(arg); }
       break;
     default:
       std::cout << "Error, select a valid BWT variant... exiting." << std::endl;
