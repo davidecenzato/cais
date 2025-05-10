@@ -56,20 +56,20 @@ make
 
 ### Output files format
 
-The `./cais` executable generates different output files depending on the input parameter configuration. You can modify the output file prefix using the `-o` flag. If your input files are larger than 4GB you can use the `./cais64` executable.
+The `./cais` executable generates different output files depending on the input flag configuration. You can modify the output file prefix using the `-o` flag. If your input files are larger than 4GB you are required to use the `./cais64` executable.
 
 - **BWT variant files**:  
-  Eight files containing one of the four BWT variants computed by this software, along with the indexes necessary to invert the computed transforms. The BWT files are stored in ASCII format (1 byte per character), while the index files are stored in binary format (4 and 8 bytes per string, using `./cais` and `./cais64`, respectively):  
-  - `.ebwt` and `.ei`: the extended BWT of Mantaci et al. (using `-e` flag). The `.ei` file can be used to invert the eBWT iff. the input strings are primitive.   
-  - `.dolebwt` and `.di`: the extended BWT of a collection of strings where all sequences are terminated with a dollar character (using `-d` flag).  
-  - `.bwt` and `.i`: the BWT of a single text without the final dollar (using `-b` flag). 
-  - `.bbwt` and `.bi`: the Bijective BWT of Gill and Scott (using `-t` flag).  
+  Eight files containing one of the four BWT variants computed by this software, along with the indexes necessary to invert the output transforms. The BWT files are stored in ASCII format (1 byte per character), while the index files are stored in binary format (4 and 8 bytes per string, using `./cais` and `./cais64`, respectively):  
+  - `.ebwt` and `.ei`: the extended BWT of Mantaci et al. (using `-e`). The `.ei` file can be used to invert the eBWT iff. the input strings are primitive.   
+  - `.dolebwt` and `.di`: the extended BWT of a collection of strings where all sequences are terminated with a dollar character (using `-d`).  
+  - `.bwt` and `.i`: the BWT of a single text without the final dollar (using `-b`). 
+  - `.bbwt` and `.bi`: the Bijective BWT of Gill and Scott (using `-t`).  
 
 - **Additional**:  
-  Two files storing the (Generalized) Conjugate Array and the Document array (4 and 8 bytes per character, using `./cais` and `./cais64`, respectively): 
-  - `.gca`: the Generalized Conjugate Array of the input collection (using `-c` togheter with `-e`, `-d` and `-t` flags). When the `-a` flag is not used, the indexes are given w.r.t. the concatenation of the input strings.
-  - `.ca`: the Conjugate Array of the input text (using `-c` togheter with `-b` flag).
-  - `.da`: the Document Array for the GCA (using `-c` and `-a` togheter with `-e` and `-d` flags).
+  Two files storing the (Generalized) Conjugate Array and the Document array in binary format (4 and 8 bytes per entry, using `./cais` and `./cais64`, respectively): 
+  - `.gca`: the Generalized Conjugate Array of the input collection (using `-c`, and one of `-e`, `-d` or `-t`). When the `-a` flag is not used, the indexes are given w.r.t. the concatenation of the input strings.
+  - `.ca`: the Conjugate Array of the input text (using `-c`, and `-b`).
+  - `.da`: the Document Array for the GCA (using `-c` and `-a`, and one of `-e` or `-d`).
 
 # External resources
 
@@ -102,4 +102,4 @@ If you use this tool in an academic setting, please cite this work as follows:
 
 ### Contacts:
 
-If you notice any bugs, please feel free to report them by opening a Git issue or by contacting us at davidecenzato Unive email.
+If you notice any bugs, please feel free to report them by opening a Git issue or by contacting us at Davide Cenzato Unive email.
