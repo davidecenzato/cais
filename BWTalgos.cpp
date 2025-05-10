@@ -61,7 +61,7 @@ void compute_ebwt_sparse(Args arg, bool concat){
     }else{
         // select the ebwt extensions
         ebwtfile = basename + std::string(".ebwt");
-        ifile = basename + std::string(".i");
+        ifile = basename + std::string(".ei");
     }
     // open output files
     if((ebwt = fopen(ebwtfile.c_str(), "w")) == nullptr){
@@ -197,7 +197,7 @@ void compute_ebwt_plain(Args arg, bool concat){
     }else{
         // select the ebwt extensions
         ebwtfile = basename + std::string(".ebwt");
-        ifile = basename + std::string(".i");
+        ifile = basename + std::string(".ei");
     }
     // open output files
     if((ebwt = fopen(ebwtfile.c_str(), "w")) == nullptr){

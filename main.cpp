@@ -26,11 +26,11 @@ The files larger than 4.29 GB will take 9n bytes plus the overhead for the bitve
 
 // function that prints the instructions for using the tool
 void print_help(char** argv) {
-  std::cout << "Usage: " << argv[ 0 ] << " <input filename> [options]" << std::endl;
+  std::cout << "Usage: " << argv[ 0 ] << " [options] <input filename>" << std::endl;
   std::cout << "  Options: " << std::endl
         << "\t-e \tconstruct the extended BWT (eBWT), def. True " << std::endl
         << "\t-d \tconstruct the dollar eBWT (dolEBWT), def. False " << std::endl
-        << "\t-b \tconstruct the BWT without dollar (BWT), def. False " << std::endl
+        << "\t-b \tconstruct the BWT of the text without dollar (BWT), def. False " << std::endl
         << "\t-t \tconstruct the bijective BWT (BBWT), def. False " << std::endl
         << "\t-f \ttake in input a fasta file (only for eBWT and dolEBWT), def. True " << std::endl
         << "\t-q \ttake in input a fastq file (only for eBWT and dolEBWT), def. False " << std::endl 
