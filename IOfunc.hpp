@@ -7,13 +7,14 @@
 // struct containing command line parameters and other globals
 struct Args {
   std::string filename = "";
-  std::string outname = "";
-  int format = 0; // input file format: 1 fasta | 2 fastq | 0 txt
-  int variant = -1; // bwt variant: 0 ebwt | 1 dolEbwt | 2 BWTwo$ | 3 BBWT
-  bool ca = false; // write conjugate array 
-  bool sparse = false; // use sparse bitvector 
-  bool doc = false; // write the document array 
-  bool verbose = false; // verbosity level
+  std::string outname  = "";
+  std::string variant  = ""; // bwt variant: eBWT | dolEBWT | BWT | BBWT
+  std::string format   = ""; // input file format: FASRA | FASTQ | plain_text
+  bool no_powers = false;    // run algorithm variant for input without powers
+  bool ca        = false;    // write conjugate array 
+  bool sparse    = true;     // use sparse bitvector 
+  bool doc       = false;    // write the document array 
+  bool verbose   = false;    // verbosity level
 };
 
 // function to load a fasta file

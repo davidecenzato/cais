@@ -12,24 +12,27 @@ void compute_ebwt_sparse(Args arg, bool concat){
     sdsl::sd_vector<>::rank_1_type r_bv;
     sdsl::sd_vector<>::select_1_type s_bv;
     // initalize output files
-    std::string ebwtfile, ifile, cafile, docfile;
-    FILE *ebwt, *I, *gCa, *Doc;
+    std::string ebwtfile, ifile, efile, cafile, docfile;
+    FILE *ebwt, *I, *exp, *gCa, *Doc;
     // initialize output basename
     std::string basename = arg.outname;
     // initialize boolean values
-    int format = arg.format;
+    std::string format = arg.format;
     bool printca = arg.ca;
     bool printdoc = arg.doc;
     // read input
-    if(format==1){
+    if(format == "FASTA"){
         if(arg.verbose) std::cout << "load fasta file" << std::endl;
         // load a fasta file
-        load_fasta(arg.filename.c_str(),Text,onset,n,ns,concat);
-    }else{
+        load_fasta(arg.filename.c_str(),Text,onset,n,ns,concat); }
+    else if(format == "FASTQ"){
         if(arg.verbose) std::cout << "load fastq file" << std::endl;
         // load a fastq file
-        load_fastq(arg.filename.c_str(),Text,onset,n,ns,concat);
-    }
+        load_fastq(arg.filename.c_str(),Text,onset,n,ns,concat); }
+    else{
+        std::cerr << "Error, when computing the eBWT or dolEBWT it is mandatory to " << std::endl
+                  << "select a string collection format, either FASTA or FASTQ."     << std::endl;
+        exit(1); }
     // construct sparse bitvector marking the starting position
     // of each string in Text
     sdsl::sd_vector_builder builder(n+1,onset.size());
@@ -40,14 +43,17 @@ void compute_ebwt_sparse(Args arg, bool concat){
     // compute rank and select data structures
     r_bv = sdsl::sd_vector<>::rank_1_type(&bv);
     s_bv = sdsl::sd_vector<>::select_1_type(&bv);
-    // initialize the circular Suffix array
+    // initialize the (Generalized) Conjugate Array
     std::vector<uint_t> CA(n,0);
-    // initialize the names of the output files
-    // compute circular suffix array
+    // initialize the string exponents vector
+    std::vector<uint_t> EXP;
+    if(not arg.no_powers) EXP = std::vector<uint_t>(ns,1);
+    // compute the Conjugate Array
     auto start = std::chrono::steady_clock::now();
-    cais(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
+    if(arg.no_powers) cais_primitive(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
+    else              cais(&Text[0], &CA[0], &EXP[0], n, alph_size, bv, r_bv, s_bv);
     auto end = std::chrono::steady_clock::now();
-    if(arg.verbose){
+    if(arg.verbose){ 
         std::cout << "gCA construction: Elapsed time in seconds: "
         << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
         << " s" << std::endl;
@@ -62,6 +68,7 @@ void compute_ebwt_sparse(Args arg, bool concat){
         // select the ebwt extensions
         ebwtfile = basename + std::string(".ebwt");
         ifile = basename + std::string(".ei");
+        efile = basename + std::string(".exp");
     }
     // open output files
     if((ebwt = fopen(ebwtfile.c_str(), "w")) == nullptr){
@@ -72,6 +79,11 @@ void compute_ebwt_sparse(Args arg, bool concat){
         std::cerr << "open() file " + ifile + " failed!" << std::endl;
         exit(-1);
     }
+    if(not arg.no_powers)
+        if((exp = fopen(efile.c_str(), "w")) == nullptr){
+            std::cerr << "open() file " + efile + " failed!" << std::endl;
+            exit(-1);
+        }
     // write the ebwt and the i vector to file
     for(size_t i=0; i<CA.size(); ++i){
         char c;
@@ -79,11 +91,17 @@ void compute_ebwt_sparse(Args arg, bool concat){
         if(bv[CA[i]]!=1){ c = Text[CA[i]-1];  }
         // write the position in the i vector
         else{ 
-            c = Text[s_bv(r_bv(CA[i]+1)+1)-1];
+            uint_t sid = r_bv(CA[i]+1);
+            c = Text[s_bv(sid+1)-1];
             if(fwrite(&i,sizeof(uint_t),1,I)!=1){
                 std::cerr << "I file write error... exiting!" << std::endl;
                 exit(-1);
             }
+            if(not arg.no_powers)
+                if(fwrite(&EXP[sid-1],sizeof(uint_t),1,exp)!=1){
+                    std::cerr << "Exp file write error... exiting!" << std::endl;
+                    exit(-1);
+                }
           }
         // write a new character in the ebwt
         putc(c, ebwt);
@@ -91,6 +109,7 @@ void compute_ebwt_sparse(Args arg, bool concat){
     // close output files
     fclose(ebwt);
     fclose(I);
+    if(not arg.no_powers) fclose(exp);
     // write the generalized conjugate array to file
     if(printca && !printdoc){
         cafile = basename + std::string(".gca");
@@ -149,24 +168,27 @@ void compute_ebwt_plain(Args arg, bool concat){
     sdsl::bit_vector::rank_1_type r_bv;
     sdsl::bit_vector::select_1_type s_bv;
     // initalize output files
-    std::string ebwtfile, ifile, cafile, docfile;
-    FILE *ebwt, *I, *gCa, *Doc;
+    std::string ebwtfile, ifile, efile, cafile, docfile;
+    FILE *ebwt, *I, *exp, *gCa, *Doc;
     // initialize output basename
     std::string basename = arg.outname;
     // initialize boolean values
-    int format = arg.format;
+    std::string format = arg.format;
     bool printca = arg.ca;
     bool printdoc = arg.doc;
     // read input
-    if(format==1){
+    if(format == "FASTA"){
         if(arg.verbose) std::cout << "load fasta file" << std::endl;
         // load a fasta file
-        load_fasta(arg.filename.c_str(),Text,onset,n,ns,concat);
-    }else{
+        load_fasta(arg.filename.c_str(),Text,onset,n,ns,concat); }
+    else if(format == "FASTQ"){
         if(arg.verbose) std::cout << "load fastq file" << std::endl;
         // load a fastq file
-        load_fastq(arg.filename.c_str(),Text,onset,n,ns,concat);
-    }
+        load_fastq(arg.filename.c_str(),Text,onset,n,ns,concat); }
+    else{
+        std::cerr << "Error, when computing the eBWT or dolEBWT it is mandatory to " << std::endl
+                  << "select a string collection format, either FASTA or FASTQ."     << std::endl;
+        exit(1); }
     // construct plain bitvector marking the starting position
     // of each string in Text
     bv = sdsl::bit_vector(n+1,0);
@@ -176,12 +198,15 @@ void compute_ebwt_plain(Args arg, bool concat){
     // compute rank and select data structures
     r_bv = sdsl::bit_vector::rank_1_type(&bv);
     s_bv = sdsl::bit_vector::select_1_type(&bv);
-    // initialize the circular Suffix array
+    // initialize the (Generalized) Conjugate Array
     std::vector<uint_t> CA(n,0);
-    // initialize the names of the output files
-    // compute circular suffix array
+    // initialize the string exponents vector
+    std::vector<uint_t> EXP;
+    if(not arg.no_powers) EXP = std::vector<uint_t>(ns,1);
+    // compute the Conjugate Array
     auto start = std::chrono::steady_clock::now();
-    cais_plain(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
+    if(arg.no_powers) cais_uncomp_primitive(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
+    else              cais_uncomp(&Text[0], &CA[0], &EXP[0], n, alph_size, bv, r_bv, s_bv);
     auto end = std::chrono::steady_clock::now();
     if(arg.verbose){
         std::cout << "gCA construction: Elapsed time in seconds: "
@@ -198,6 +223,7 @@ void compute_ebwt_plain(Args arg, bool concat){
         // select the ebwt extensions
         ebwtfile = basename + std::string(".ebwt");
         ifile = basename + std::string(".ei");
+        efile = basename + std::string(".exp");
     }
     // open output files
     if((ebwt = fopen(ebwtfile.c_str(), "w")) == nullptr){
@@ -208,6 +234,11 @@ void compute_ebwt_plain(Args arg, bool concat){
         std::cerr << "open() file " + ifile + " failed!" << std::endl;
         exit(-1);
     }
+    if(not arg.no_powers)
+        if((exp = fopen(efile.c_str(), "w")) == nullptr){
+            std::cerr << "open() file " + efile + " failed!" << std::endl;
+            exit(-1);
+        }
     // write the ebwt and the i vector to file
     for(size_t i=0; i<CA.size(); ++i){
         char c;
@@ -215,11 +246,17 @@ void compute_ebwt_plain(Args arg, bool concat){
         if(bv[CA[i]]!=1){ c = Text[CA[i]-1];  }
         // write the position in the i vector
         else{ 
-            c = Text[s_bv(r_bv(CA[i]+1)+1)-1];
+            uint_t sid = r_bv(CA[i]+1);
+            c = Text[s_bv(sid+1)-1];
             if(fwrite(&i,sizeof(uint_t),1,I)!=1){
                 std::cerr << "I file write error... exiting!" << std::endl;
                 exit(-1);
             }
+            if(not arg.no_powers)
+                if(fwrite(&EXP[sid-1],sizeof(uint_t),1,exp)!=1){
+                    std::cerr << "Exp file write error... exiting!" << std::endl;
+                    exit(-1);
+                }
           }
         // write a new character in the ebwt
         putc(c, ebwt);
@@ -227,6 +264,7 @@ void compute_ebwt_plain(Args arg, bool concat){
     // close output files
     fclose(ebwt);
     fclose(I);
+    if(not arg.no_powers) fclose(exp);
     // write the generalized conjugate array to file
     if(printca && !printdoc){
         cafile = basename + std::string(".gca");
@@ -405,7 +443,7 @@ void compute_bbwt_sparse(Args arg){
     // initialize the names of the output files
     // compute the generalized conjugate array
     auto start = std::chrono::steady_clock::now();
-    cais(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
+    cais_primitive(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
     auto end = std::chrono::steady_clock::now();
     if(arg.verbose){
     std::cout << "gCA construction: Elapsed time in seconds: "
@@ -517,7 +555,7 @@ void compute_bbwt_plain(Args arg){
     // initialize the names of the output files
     // compute the generalized conjugate array
     auto start = std::chrono::steady_clock::now();
-    cais_plain(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
+    cais_uncomp_primitive(&Text[0], &CA[0], n, alph_size, bv, r_bv, s_bv);
     auto end = std::chrono::steady_clock::now();
     if(arg.verbose){
     std::cout << "gCA construction: Elapsed time in seconds: "

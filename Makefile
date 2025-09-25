@@ -1,5 +1,5 @@
 # compilation flags
-CCX_FLAGS=-std=c++11 -O3 -Wall -Wextra -pedantic -g -I external/sdsl-lite/installed/include -L external/sdsl-lite/installed/lib
+CCX_FLAGS=-std=c++14 -O3 -Wall -Wextra -pedantic -g -I external/sdsl-lite/installed/include -L external/sdsl-lite/installed/lib
 CCX=g++
 
 # main executables 

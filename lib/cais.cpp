@@ -1,11 +1,10 @@
 /*
- * Conjugate Array Induced Sorting (cais) implementation to compute either the generalized conjugate array
- * of a string collection or the conjugate array of a text without dollar.
+ * Conjugate Array Induced Sorting (cais) algorithm implementation to compute either the 
+   generalized conjugate array of a string collection or the conjugate array of one string without dollar.
  * 
  * This code is adapted from https://github.com/kurpicz/saca-bench/blob/master/sa-is/sais.cpp
- * which is the original code of the SA-IS algorithm listed below, and 
- * from https://github.com/felipelouza/gsa-is/blob/master/gsacak.c which is an implementation
- * of the GSACA-K algorithm.
+ * which implements the original SA-IS algorithm, and 
+ * https://github.com/felipelouza/gsa-is/blob/master/gsacak.c which implements the GSACA-K algorithm.
  *
  */
 
@@ -43,7 +42,7 @@ void induceL(uint_t *CA, uint_t *s, uint_t *bkt, sdsl::sd_vector<>::rank_1_type&
     }
 }
 
-// induce L suffixes for cais algorithm using sdsl plain bitvector
+// induce L suffixes for cais algorithm using sdsl uncompressed bitvector
 void induceL_plain(uint_t *CA, uint_t *s, uint_t *bkt, sdsl::bit_vector::rank_1_type& r_bv, 
              sdsl::bit_vector::select_1_type& s_bv, sdsl::bit_vector& bv, size_t n, size_t K, 
              size_t cs, bool phase) { 
@@ -84,7 +83,7 @@ void induceLbwt(uint_t *CA, uint_t *s, uint_t *bkt, size_t n, size_t K,
 }
 
 // induce S suffixes for cais algorithm using sdsl sparse bitvector
-void induceS(uint_t *CA, uint_t *s, uint_t *bkt, std::vector<uint_t>& singletons, sdsl::sd_vector<>::rank_1_type& r_bv,
+void induceS(uint_t *CA, uint_t *s, uint_t *bkt, pair_vector& singletons, sdsl::sd_vector<>::rank_1_type& r_bv,
              sdsl::sd_vector<>::select_1_type& s_bv, sdsl::sd_vector<>& bv, size_t n, size_t K, size_t cs, bool phase) { 
     
     size_t i, j, m, rank;
@@ -107,16 +106,15 @@ void induceS(uint_t *CA, uint_t *s, uint_t *bkt, std::vector<uint_t>& singletons
     // scan all singletons
     size_t sz = singletons.size();
     for(i = 0;i < sz; ++i){
-      //uint_t curr = singletons[sz-i-1];
-      uint_t curr = singletons[i];
-      size_t slen = curr - s_bv(r_bv(curr+1)) + 1;
-      for(j = 0; j < slen; ++j){ CA[bkt[chr(curr-j)]--]=curr-j; } 
+      uint_t curr = singletons[i].first;
+      size_t slen = singletons[i].second;
+      for(j = 0; j < slen; ++j){ CA[bkt[chr(curr-j)]--]=curr-slen+1; }  
     }
   }
 }
 
-// induce S suffixes for cais algorithm using sdsl plain bitvector
-void induceS_plain(uint_t *CA, uint_t *s, uint_t *bkt, std::vector<uint_t>& singletons, sdsl::bit_vector::rank_1_type& r_bv,
+// induce S suffixes for cais algorithm using sdsl uncompressed bitvector
+void induceS_plain(uint_t *CA, uint_t *s, uint_t *bkt, pair_vector& singletons, sdsl::bit_vector::rank_1_type& r_bv,
              sdsl::bit_vector::select_1_type& s_bv, sdsl::bit_vector& bv, size_t n, size_t K, size_t cs, bool phase) { 
     
     size_t i, j, m, rank;
@@ -139,10 +137,9 @@ void induceS_plain(uint_t *CA, uint_t *s, uint_t *bkt, std::vector<uint_t>& sing
     // scan all singletons
     size_t sz = singletons.size();
     for(i = 0;i < sz; ++i){
-      //uint_t curr = singletons[sz-i-1];
-      uint_t curr = singletons[i];
-      size_t slen = curr - s_bv(r_bv(curr+1)) + 1;
-      for(j = 0; j < slen; ++j){ CA[bkt[chr(curr-j)]--]=curr-j; } 
+      uint_t curr = singletons[i].first;
+      size_t slen = singletons[i].second;
+      for(j = 0; j < slen; ++j){ CA[bkt[chr(curr-j)]--]=curr-slen+1; }  
     }
   }
 }
@@ -190,25 +187,25 @@ uint_t LMSlength(uint_t *s, uint_t sb, uint_t eb, uint_t x, size_t cs) {
   return len+1;
 }
 
-/** @brief compute the generalized conjugate array of string s[0..n-1] using CAIS algo
+/** @brief compute the generalized conjugate array of a string collection using the CAIS algorithm
  *
- *  @param s     input string 
+ *  @param s     concatenated input string collection
  *  @param CA    generalized conjugate array 
- *  @param n     string length
+ *  @param n     concatenation length
  *  @param K     alphabet size
  *  @param cs    integer size
- *  @param bv   sparse bitvector for string delimiters
- *  @param r_bv   support for rank queries
- *  @param s_bv   support for select queries
- *  @return      None
+ *  @param bv    sparse bitvector for string delimiters
+ *  @param r_bv  support for rank queries
+ *  @param s_bv  support for select queries
+ *  @return      none
  */
 void CAIS(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::sd_vector<> &bv,
           sdsl::sd_vector<>::rank_1_type& r_bv, sdsl::sd_vector<>::select_1_type& s_bv) {
   // initialize variables
   size_t i, j, m, nseq;
   size_t sb, eb, fl, len; 
-  // singletons vector
-  std::vector<uint_t> sn;
+  // power words/singletons vector
+  pair_vector ps_v;
   // no. sequences
   nseq = r_bv(n);
   // stage 1: reduce the problem by at least 1/2
@@ -257,7 +254,7 @@ void CAIS(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::sd_vector<
   
   // Induce L ans S suffixes to sort the circular LMS substrings
   induceL(CA, s, bkt, r_bv, s_bv, bv, n, K, cs, true);
-  induceS(CA, s, bkt, sn, r_bv, s_bv, bv, n, K, cs, true); 
+  induceS(CA, s, bkt, ps_v, r_bv, s_bv, bv, n, K, cs, true); 
   
   free(bkt); // free bucket vector
   
@@ -341,7 +338,7 @@ void CAIS(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::sd_vector<
   for(i=0; i<nseq; ++i){
       size_t ni = nseq-i; bool type, mismatch;
       sb=s_bv(ni); eb=s_bv(ni+1)-1; len=eb-sb+1;
-      if(len==1){ sn.push_back(sb); } // fill singletons vector 
+      if(len==1){ ps_v.push_back(std::make_pair(sb,1)); } // fill singletons vector 
       else{
           // if it is not a singleton find type of the first int
           type = 0, mismatch = 0;
@@ -356,7 +353,7 @@ void CAIS(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::sd_vector<
           // type of last int
           if(chr(eb)!=chr(sb)){ type = (chr(eb)>chr(sb))?0:1; }
           // if the sequence is a power
-          if(!mismatch){ sn.push_back(eb); }
+          if(!mismatch){ ps_v.push_back(std::make_pair(eb,eb-sb+1)); }
           else{
             // find all S* suffixes
             for(m=0; m<len-1; ++m){
@@ -385,34 +382,38 @@ void CAIS(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::sd_vector<
       j=CA[n1-i-1]; CA[n1-i-1]=EMPTY;
       CA[bkt[chr(j)]--]=j;
   }
+
+  std::sort(ps_v.begin(), ps_v.end(), [](auto& left, auto& right){
+    return left.second > right.second;
+  });
   
   // induce the L and S conjugates to compute the final CA of each level
   induceL(CA, s, bkt, r_bv, s_bv, bv, n, K, cs, false);
-  induceS(CA, s, bkt, sn, r_bv, s_bv, bv, n, K, cs, false); 
+  induceS(CA, s, bkt, ps_v, r_bv, s_bv, bv, n, K, cs, false); 
   
   // free bucket vector
   free(bkt); 
 }
 
-/** @brief compute the generalized conjugate array of string s[0..n-1] using CAIS algo
+/** @brief compute the generalized conjugate array of a string collection using the CAIS algorithm
  *
- *  @param s     input string 
+ *  @param s     concatenated input string collection
  *  @param CA    generalized conjugate array 
- *  @param n     string length
+ *  @param n     concatenation length
  *  @param K     alphabet size
  *  @param cs    integer size
- *  @param bv   bitvector for string delimiters
- *  @param r_bv   support for rank queries
- *  @param s_bv   support for select queries
- *  @return      None
+ *  @param bv    bitvector for string delimiters
+ *  @param r_bv  support for rank queries
+ *  @param s_bv  support for select queries
+ *  @return      none
  */
 void CAIS_P(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::bit_vector &bv,
             sdsl::bit_vector::rank_1_type& r_bv, sdsl::bit_vector::select_1_type& s_bv) {
   // initialize variables
   size_t i, j, m, nseq;
   size_t sb, eb, fl, len; 
-  // singletons vector
-  std::vector<uint_t> sn;
+  // power words/singletons vector
+  pair_vector ps_v;
   // no. sequences
   nseq = r_bv(n);
   // stage 1: reduce the problem by at least 1/2
@@ -461,7 +462,7 @@ void CAIS_P(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::bit_vect
   
   // Induce L ans S suffixes to sort the circular LMS substrings
   induceL_plain(CA, s, bkt, r_bv, s_bv, bv, n, K, cs, true);
-  induceS_plain(CA, s, bkt, sn, r_bv, s_bv, bv, n, K, cs, true); 
+  induceS_plain(CA, s, bkt, ps_v, r_bv, s_bv, bv, n, K, cs, true); 
   
   free(bkt); // free bucket vector
   
@@ -544,7 +545,7 @@ void CAIS_P(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::bit_vect
   for(i=0; i<nseq; ++i){
       size_t ni = nseq-i; bool type, mismatch;
       sb=s_bv(ni); eb=s_bv(ni+1)-1; len=eb-sb+1;
-      if(len==1){ sn.push_back(sb); } // fill singletons vector 
+      if(len==1){ ps_v.push_back(std::make_pair(sb,1)); } // fill singletons vector 
       else{
           // if it is not a singleton find type of the first int
           type = 0, mismatch = 0;
@@ -559,7 +560,7 @@ void CAIS_P(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::bit_vect
           // type of last int
           if(chr(eb)!=chr(sb)){ type = (chr(eb)>chr(sb))?0:1; }
           // if the sequence is a power
-          if(!mismatch){ sn.push_back(eb); }
+          if(!mismatch){ ps_v.push_back(std::make_pair(eb,eb-sb+1)); }
           else{
             // find all S* suffixes
             for(m=0; m<len-1; ++m){
@@ -588,23 +589,27 @@ void CAIS_P(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::bit_vect
       j=CA[n1-i-1]; CA[n1-i-1]=EMPTY;
       CA[bkt[chr(j)]--]=j;
   }
+
+  std::sort(ps_v.begin(), ps_v.end(), [](auto& left, auto& right){
+    return left.second > right.second;
+  });
   
   // induce the L and S conjugates to compute the final CA of each level
   induceL_plain(CA, s, bkt, r_bv, s_bv, bv, n, K, cs, false);
-  induceS_plain(CA, s, bkt, sn, r_bv, s_bv, bv, n, K, cs, false); 
+  induceS_plain(CA, s, bkt, ps_v, r_bv, s_bv, bv, n, K, cs, false); 
   
   // free bucket vector
   free(bkt); 
 }
 
-/** @brief compute the conjugate array of string s[0..n-1] using CAIS bwt algo
+/** @brief compute the conjugate array of one string s[0..n-1] using the CAIS bwt algorithm
  *
  *  @param s     input string 
  *  @param CA    conjugate array 
  *  @param n     string length
  *  @param K     alphabet size
  *  @param cs    integer size
- *  @return      None
+ *  @return      none
  */
 void CAISbwt(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs) {
     size_t i, j, m, fl;
@@ -763,47 +768,126 @@ void CAISbwt(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs) {
 }
 
 /**
- * @brief Compute the generalized conjugate array of a string collection using cais algo
+ * @brief Compute the postprocessing for GCAs containing power words
  * 
- * @param s input string
- * @param CA generalized conjugate array
- * @param n length of the input string
- * @param K alphabet size
- * @param bv sparse sdsl bitvector of the starting phrases of the parse
- * @param r_bv rank data structure for sdsl sparse bitvector
- * @param s_bv select data structure for sdsl sparse bitvector
+ * @param CA    generalized conjugate array
+ * @param EXP   array containing the string exponents
+ * @param n     length of the input string
+ * @param r_bv  rank data structure for string delimiters bitvector
+ * @param s_bv  select data structure for string delimiters bitvector
+ * @return      none
  */
-void cais(unsigned char *s, uint_t *CA, size_t n, size_t K, sdsl::sd_vector<> &bv,
-          sdsl::sd_vector<>::rank_1_type& r_bv, sdsl::sd_vector<>::select_1_type& s_bv){
+template<class rank_bitvector = sdsl::sd_vector<>::rank_1_type, 
+         class select_bitvector = sdsl::sd_vector<>::select_1_type>
+void postprocessing(uint_t *CA, uint_t *EXP, size_t n, 
+                    rank_bitvector& r_bv, select_bitvector& s_bv){
+    uint_t runLen = 1;
+    for (uint_t i = 1; i <= n; ++i) {
+        if (i < n && CA[i] == CA[i - 1]) {
+            ++runLen;
+        } else {
+            if (runLen > 1) {
+                uint_t val    = CA[i - 1];
+                uint_t sid    = r_bv(val + 1);
+                uint_t b      = s_bv(sid);
+                uint_t e      = s_bv(sid + 1);
+                uint_t slen   = e - b;
+                uint_t rlen = slen / runLen;
+                uint_t first  = b + (val - b) % rlen;
+                for(uint_t j = 0; j < runLen; ++j){ CA[i-runLen+j] = first+(rlen*j); }
+                EXP[sid-1] = runLen;
+            }
+            runLen = 1;
+        }
+    }
+}
+
+/**
+ * @brief Compute the generalized conjugate array of a string collection of primitive strings using the cais algorithm
+ * 
+ * @param s     concatenated input string collection
+ * @param CA    generalized conjugate array
+ * @param n     concatenation length
+ * @param K     alphabet size
+ * @param bv    sparse sdsl bitvector storing the string delimiters
+ * @param r_bv  rank data structure for sdsl sparse bitvector
+ * @param s_bv  select data structure for sdsl sparse bitvector
+ * @return      none
+ */
+void cais_primitive(unsigned char *s, uint_t *CA, size_t n, size_t K, sdsl::sd_vector<> &bv,
+                    sdsl::sd_vector<>::rank_1_type& r_bv, sdsl::sd_vector<>::select_1_type& s_bv){
     if((s == nullptr) || (CA == nullptr) || (n == 0)) {std::cerr << "Empty input given." << std::endl; exit(1);}
     CAIS((uint_t *)s, (uint_t *)CA, n, K, sizeof(unsigned char), bv, r_bv, s_bv);
 }
 
 /**
- * @brief Compute the generalized conjugate array of a string collection using cais algo
+ * @brief Compute the generalized conjugate array of any arbitrary string collection using the cais algorithm
  * 
- * @param s input string
- * @param CA generalized conjugate array
- * @param n length of the input string
- * @param K alphabet size
- * @param bv plain sdsl bitvector of the starting phrases of the parse
- * @param r_bv rank data structure for sdsl plain bitvector
- * @param s_bv select data structure for sdsl plain bitvector
+ * @param s     concatenated input string collection
+ * @param CA    generalized conjugate array
+ * @param EXP   array containing the string exponents
+ * @param n     concatenation length
+ * @param K     alphabet size
+ * @param bv    sparse sdsl bitvector storing the string delimiters
+ * @param r_bv  rank data structure for sdsl sparse bitvector
+ * @param s_bv  select data structure for sdsl sparse bitvector
+ * @return      none
  */
-void cais_plain(unsigned char *s, uint_t *CA, size_t n, size_t K, sdsl::bit_vector &bv,
-                sdsl::bit_vector::rank_1_type& r_bv, sdsl::bit_vector::select_1_type& s_bv){
+void cais(unsigned char *s, uint_t *CA, uint_t *EXP, size_t n, size_t K, sdsl::sd_vector<> &bv,
+          sdsl::sd_vector<>::rank_1_type& r_bv, sdsl::sd_vector<>::select_1_type& s_bv){
+    if((s == nullptr) || (CA == nullptr) || (n == 0)) {std::cerr << "Empty input given." << std::endl; exit(1);}
+    CAIS((uint_t *)s, (uint_t *)CA, n, K, sizeof(unsigned char), bv, r_bv, s_bv);
+    /* compute postprocessing for power words */
+    postprocessing((uint_t *)CA,(uint_t *)EXP,n,r_bv,s_bv);
+}
+
+/**
+ * @brief Compute the generalized conjugate array of a string collection of primitive strings using the cais algorithm
+ * 
+ * @param s     concatenated input string collection
+ * @param CA    generalized conjugate array
+ * @param n     concatenation length
+ * @param K     alphabet size
+ * @param bv    uncompressed sdsl bitvector storing the string delimiters
+ * @param r_bv  rank data structure for sdsl uncompressed bitvector
+ * @param s_bv  select data structure for sdsl uncompressed bitvector
+ * @return      none
+ */
+void cais_uncomp_primitive(unsigned char *s, uint_t *CA, size_t n, size_t K, sdsl::bit_vector &bv,
+                           sdsl::bit_vector::rank_1_type& r_bv, sdsl::bit_vector::select_1_type& s_bv){
     if((s == nullptr) || (CA == nullptr) || (n == 0)) {std::cerr << "Empty input given." << std::endl; exit(1);}
     CAIS_P((uint_t *)s, (uint_t *)CA, n, K, sizeof(unsigned char), bv, r_bv, s_bv);
 }
 
 /**
- * @brief Compute the conjugate array of a text using cais algo
+ * @brief Compute the generalized conjugate array of any arbitrary string collection using the cais algorithm
  * 
- * @param s input string
+ * @param s     concatenated input string collection
+ * @param CA    generalized conjugate array
+ * @param EXP   array containing the string exponents
+ * @param n     concatenation length
+ * @param K     alphabet size
+ * @param bv    uncompressed sdsl bitvector storing the string delimiters
+ * @param r_bv  rank data structure for sdsl uncompressed bitvector
+ * @param s_bv  select data structure for sdsl uncompressed bitvector
+ * @return      None
+ */
+void cais_uncomp(unsigned char *s, uint_t *CA, uint_t *EXP, size_t n, size_t K, sdsl::bit_vector &bv,
+                 sdsl::bit_vector::rank_1_type& r_bv, sdsl::bit_vector::select_1_type& s_bv){
+    if((s == nullptr) || (CA == nullptr) || (n == 0)) {std::cerr << "Empty input given." << std::endl; exit(1);}
+    CAIS_P((uint_t *)s, (uint_t *)CA, n, K, sizeof(unsigned char), bv, r_bv, s_bv);
+    /* compute postprocessing for power words */
+    postprocessing<sdsl::bit_vector::rank_1_type,sdsl::bit_vector::select_1_type>((uint_t *)CA,(uint_t *)EXP,n,r_bv,s_bv);
+}
+
+/**
+ * @brief Compute the conjugate array of one string using the cais algorithm
+ * 
+ * @param s  input string
  * @param CA conjugate array
- * @param n length of the input string
- * @param K alphabet size
- * @param bv bitvector for phrase delimiters
+ * @param n  length of the input string
+ * @param K  alphabet size
+ * @return   none
  */
 void cais_bwt(unsigned char *s, uint_t *CA, size_t n, size_t K){
     if((s == nullptr) || (CA == nullptr) || (n == 0)) {std::cerr << "Empty input given." << std::endl; exit(-1);}

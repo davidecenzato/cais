@@ -28,19 +28,18 @@ The files larger than 4.29 GB will take 9n bytes plus the overhead for the bitve
 void print_help(char** argv) {
   std::cout << "Usage: " << argv[ 0 ] << " [options] <input filename>" << std::endl;
   std::cout << "  Options: " << std::endl
-        << "\t-e \tconstruct the extended BWT (eBWT), def. True " << std::endl
-        << "\t-d \tconstruct the dollar eBWT (dolEBWT), def. False " << std::endl
-        << "\t-b \tconstruct the BWT of the text without dollar (BWT), def. False " << std::endl
-        << "\t-t \tconstruct the bijective BWT (BBWT), def. False " << std::endl
-        << "\t-f \ttake in input a fasta file (only for eBWT and dolEBWT), def. True " << std::endl
-        << "\t-q \ttake in input a fastq file (only for eBWT and dolEBWT), def. False " << std::endl 
-        << "\t-s \tuse sparse bitvector (less space with long strings), def. False " << std::endl 
-        //<< "\t-n \ttake in input a new line sep file, def. False " << std::endl to be implemented 
-        << "\t-c \twrite the conjugate array, def. False " << std::endl
-        << "\t-a \twrite the document array (only for eBWT and dolEBWT), def. False " << std::endl 
-        << "\t-v \tset verbose mode, def. False " << std::endl
-        << "\t-o O\tbasename for the output files, def. <input filename>" << std::endl;
-
+        << "\t-b B\tselect one BWT variant to construct (eBWT|dolEBWT|BWT|BBWT) " << std::endl
+        << "\t    \teBWT: the original extended BWT of Mantaci et al. " << std::endl
+        << "\t    \tdolEBWT: the eBWT where each string is terminated with a dollar " << std::endl
+        << "\t    \tBWT: the BWT of a string without the terminating dollar " << std::endl
+        << "\t    \tBBWT: the original Bijective BWT of Gil and Scott " << std::endl
+        << "\t-o O\tbasename for the output files, def. <output filename>" << std::endl
+        << "\t-i I\tselect the input format (FASTA|FASTQ|plain_text) " << std::endl
+        << "\t-p  \trun the algorithm variant for datasets of primitive strings, def. False " << std::endl 
+        << "\t-u  \tuse an uncompressed bitvector to represent string boundaries, def. False " << std::endl 
+        << "\t-c  \twrite the conjugate array, def. False " << std::endl
+        << "\t-d  \twrite the document array (only for eBWT and dolEBWT), def. False " << std::endl 
+        << "\t-v  \tset verbose mode, def. False " << std::endl;
   exit(-1);
 }
 // function for parsing the input arguments
@@ -54,42 +53,35 @@ void parseArgs( int argc, char** argv, Args& arg ) {
   puts("");
  
   std::string sarg;
-  while ((c = getopt( argc, argv, "edbtfqscao:vh") ) != -1) {
+  while ((c = getopt( argc, argv, "db:i:pcuo:vh") ) != -1) {
     switch(c) {
-      case 'e':
-        arg.variant = 0; break;
-        // compute the eBWT
-      case 'd':
-        arg.variant = 1; break;
-        // compute the dolEBWT
       case 'b':
-        arg.variant = 2; break;
-        // compute the BWT
-      case 't':
-        arg.variant = 3; break;
-        // compute the BBWT
-      case 'f':
-        arg.format = 1; break;
-        // take in input a fasta file
-      case 'q':
-        arg.format = 2; break;
-        // take in input a fastq file
-      case 'v':
-        arg.verbose = true; break;
-        // verbose mode
-      case 's':
-        arg.sparse = true; break;
-        // use sparse bitvector
-      case 'c':
-        arg.ca = true; break;
-        // write the conjugate array
-      case 'a':
-        arg.doc = true; break;
-        // write the document array
+        sarg.assign( optarg );
+        arg.variant.assign( sarg ); break;
+        // set the BWT variant to compute
+      case 'i':
+        sarg.assign( optarg );
+        arg.format.assign( sarg ); break;
+        // set the input format
       case 'o':
         sarg.assign( optarg );
         arg.outname.assign( sarg ); break;
         // store the output files path
+      case 'p':
+        arg.no_powers = true; break;
+        // algorithm variant for inputs wo. powers
+      case 'u':
+        arg.sparse = false; break;
+        // use sparse bitvector
+      case 'c':
+        arg.ca = true; break;
+        // write the conjugate array
+      case 'd':
+        arg.doc = true; break;
+        // write the document array
+      case 'v':
+        arg.verbose = true; break;
+        // verbose mode
       case 'h':
         print_help(argv); exit(-1);
         // fall through
@@ -109,18 +101,9 @@ void parseArgs( int argc, char** argv, Args& arg ) {
   // set output files basename
   if(arg.outname == "") arg.outname = arg.filename;
   // check BWT variant
-  if(arg.variant == -1){
+  if(arg.variant == ""){
     std::cerr << "Error, select a BWT variant." << std::endl;
     exit(1);
-  }
-  // check input type
-  if(arg.variant > 1){
-    // force input format
-    if(arg.format > 0) arg.format = 0;
-  }
-  else{
-    //force input format
-    if(arg.format == 0) arg.format = 1;
   }
 }
 
@@ -130,29 +113,28 @@ int main(int argc, char** argv)
   Args arg;
   parseArgs(argc, argv, arg);
   // select which BWT variant to compute
-  switch(arg.variant) {
-    case 0:
-      if(arg.verbose) std::cout << "Computing the eBWT of: " << arg.filename << std::endl;
-      if(arg.sparse){ compute_ebwt_sparse(arg, false); }
-      else{ compute_ebwt_plain(arg, false); }
-      break;
-    case 1:
-      if(arg.verbose) std::cout << "Computing the dollar eBWT of: " << arg.filename << std::endl;
-      if(arg.sparse){ compute_ebwt_sparse(arg, true); }
-      else{ compute_ebwt_plain(arg, true); }
-      break;
-    case 2:
-      if(arg.verbose) std::cout << "Computing the BWT of: " << arg.filename << std::endl;
-      compute_bwt_wo_dol(arg);
-      break;
-    case 3:
-      if(arg.verbose) std::cout << "Computing the BBWT of: " << arg.filename << std::endl;
-      if(arg.sparse){ compute_bbwt_sparse(arg); }
-      else{ compute_bbwt_plain(arg); }
-      break;
-    default:
-      std::cout << "Error, select a valid BWT variant... exiting." << std::endl;
-      exit(1);
+  if(arg.variant == "eBWT"){
+    if(arg.verbose) std::cout << "Computing the eBWT of: " << arg.filename << std::endl;
+    if(arg.sparse){ compute_ebwt_sparse(arg, false); }
+    else{ compute_ebwt_plain(arg, false); }
+  }
+  else if(arg.variant == "dolEBWT"){
+    if(arg.verbose) std::cout << "Computing the dollar eBWT of: " << arg.filename << std::endl;
+    if(arg.sparse){ compute_ebwt_sparse(arg, true); }
+    else{ compute_ebwt_plain(arg, true); }
+  }
+  else if(arg.variant == "BWT"){
+    if(arg.verbose) std::cout << "Computing the BWT of: " << arg.filename << std::endl;
+    compute_bwt_wo_dol(arg);
+  }
+  else if(arg.variant == "BBWT"){
+    if(arg.verbose) std::cout << "Computing the BBWT of: " << arg.filename << std::endl;
+    if(arg.sparse){ compute_bbwt_sparse(arg); }
+    else{ compute_bbwt_plain(arg); }
+  }
+  else{
+    std::cout << "Error, select a valid BWT variant... exiting." << std::endl;
+    exit(1);
   }
 
   return 0;
