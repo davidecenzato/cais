@@ -383,7 +383,7 @@ void CAIS(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::sd_vector<
       CA[bkt[chr(j)]--]=j;
   }
 
-  std::sort(ps_v.begin(), ps_v.end(), [](auto& left, auto& right){
+  std::stable_sort(ps_v.begin(), ps_v.end(), [](auto& left, auto& right){
     return left.second > right.second;
   });
   
@@ -590,7 +590,7 @@ void CAIS_P(uint_t *s, uint_t *CA, size_t n, size_t K, size_t cs, sdsl::bit_vect
       CA[bkt[chr(j)]--]=j;
   }
 
-  std::sort(ps_v.begin(), ps_v.end(), [](auto& left, auto& right){
+  std::stable_sort(ps_v.begin(), ps_v.end(), [](auto& left, auto& right){
     return left.second > right.second;
   });
   

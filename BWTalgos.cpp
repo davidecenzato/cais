@@ -79,7 +79,7 @@ void compute_ebwt_sparse(Args arg, bool concat){
         std::cerr << "open() file " + ifile + " failed!" << std::endl;
         exit(-1);
     }
-    if(not arg.no_powers)
+    if(not arg.no_powers and not concat)
         if((exp = fopen(efile.c_str(), "w")) == nullptr){
             std::cerr << "open() file " + efile + " failed!" << std::endl;
             exit(-1);
@@ -97,7 +97,7 @@ void compute_ebwt_sparse(Args arg, bool concat){
                 std::cerr << "I file write error... exiting!" << std::endl;
                 exit(-1);
             }
-            if(not arg.no_powers)
+            if(not arg.no_powers and not concat)
                 if(fwrite(&EXP[sid-1],sizeof(uint_t),1,exp)!=1){
                     std::cerr << "Exp file write error... exiting!" << std::endl;
                     exit(-1);
@@ -109,7 +109,7 @@ void compute_ebwt_sparse(Args arg, bool concat){
     // close output files
     fclose(ebwt);
     fclose(I);
-    if(not arg.no_powers) fclose(exp);
+    if(not arg.no_powers and not concat) fclose(exp);
     // write the generalized conjugate array to file
     if(printca && !printdoc){
         cafile = basename + std::string(".gca");
@@ -234,7 +234,7 @@ void compute_ebwt_plain(Args arg, bool concat){
         std::cerr << "open() file " + ifile + " failed!" << std::endl;
         exit(-1);
     }
-    if(not arg.no_powers)
+    if(not arg.no_powers and not concat)
         if((exp = fopen(efile.c_str(), "w")) == nullptr){
             std::cerr << "open() file " + efile + " failed!" << std::endl;
             exit(-1);
@@ -252,7 +252,7 @@ void compute_ebwt_plain(Args arg, bool concat){
                 std::cerr << "I file write error... exiting!" << std::endl;
                 exit(-1);
             }
-            if(not arg.no_powers)
+            if(not arg.no_powers and not concat)
                 if(fwrite(&EXP[sid-1],sizeof(uint_t),1,exp)!=1){
                     std::cerr << "Exp file write error... exiting!" << std::endl;
                     exit(-1);
@@ -264,7 +264,7 @@ void compute_ebwt_plain(Args arg, bool concat){
     // close output files
     fclose(ebwt);
     fclose(I);
-    if(not arg.no_powers) fclose(exp);
+    if(not arg.no_powers and not concat) fclose(exp);
     // write the generalized conjugate array to file
     if(printca && !printdoc){
         cafile = basename + std::string(".gca");
