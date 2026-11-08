@@ -11,22 +11,23 @@ Usage: ./cais [options] <input filename>
         dolEBWT: the eBWT where each string is terminated with a dollar 
         BWT:     the BWT of a string without the terminating dollar 
         BBWT:    the original Bijective BWT of Gil and Scott 
-  -o O  basename for the output files, def. <output filename>
+  -o O  basename for the output files, def. <input filename>
   -i I  select the input format (FASTA|FASTQ|plain_text) 
-  -p    run the algorithm variant for datasets of primitive strings, def. False 
+  -p    run the algorithm variant for datasets of primitive strings only, def. False 
   -u    use an uncompressed bitvector to represent string boundaries, def. False 
   -c    write the conjugate array, def. False 
   -d    write the document array (only for eBWT and dolEBWT), def. False 
   -v    set verbose mode, def. False
 ```
-When computing the eBWT and eBWT, you can choose the format of your input between fasta and fastq format.
-In addition, with the -u flag, the tool uses an uncompressed bit vector to store the strings' boundaries, and with the -p flag, the tool runs the (simpler) algorithm variant for inputs containing primitive strings only.
-When computing the BWT and the BBWT, the input is taken as one single text.
+When computing the eBWT and the dolEBWT, you can choose the format of your input between FASTA and FASTQ.
+In addition, with the -u flag, the tool uses an uncompressed bit vector to store the strings' boundaries. Without the -p flag, the eBWT can be computed for any string collection, including power words (strings of the form u^k with k > 1); with the -p flag, the tool runs a simpler algorithm variant that assumes all strings are primitive, and with power words in the input its output is not correct.
+When computing the BWT and the BBWT, the input is taken as one single text. The input cannot contain characters with byte value 0 or 1, which are used internally by the algorithm.
 
 ### Requirements
 
 The cais tool requires:
-* A modern C++14 compiler such as `g++` version 4.9 or higher.
+* A modern C++14 compiler, such as `g++` version 4.9 or higher.
+* A 64-bit macOS or Linux system.
 
 # Example
 
@@ -46,8 +47,8 @@ make
 ### Run on Example Data
 
 ```console
-// Construct the eBWT and the gCA on a toy data set
-./cais -b eBWT -i FASTA -c data/powers.fasta
+# Construct the eBWT, the GCA and the document array of a toy data set containing power words
+./cais -b eBWT -i FASTA -c -d data/powers.fasta
 ```
 
 ### Output files format
@@ -56,16 +57,16 @@ The `./cais` executable generates different output files depending on the input 
 
 - **BWT files**:  
   Eight files containing one of the four BWT variants computed by this software, along with the indexes necessary to invert the output transforms. The BWT files are stored in ASCII format (1 byte per character), while the index files are stored in binary format (4 or 8 bytes per string, using `./cais` and `./cais64`, respectively):  
-  - `.ebwt`, `.ei` and `.exp`: the extended BWT of Mantaci et al. (using `-b eBWT`). The `.ei` and `.exp` files contain the input string offsets in the eBWT, and the string exponents; they can be used to invert the eBWT.   
+  - `.ebwt`, `.ei` and `.exp`: the extended BWT of Mantaci et al. (using `-b eBWT`). For each input string, `.ei` contains the position in the eBWT of its first character, and `.exp` its exponent (`.exp` is not written with `-p`). To invert the eBWT, follow the LF-mapping from each position in `.ei` until it comes back to that position: this gives the primitive root of the string, which is then repeated `.exp` times.
   - `.dolebwt` and `.di`: the extended BWT of a string collection where all sequences are terminated with a dollar character (using `-b dolEBWT`).  
   - `.bwt` and `.i`: the BWT of a single text without the final terminating dollar (using `-b BWT`). 
   - `.bbwt` and `.bi`: the Bijective BWT of Gil and Scott (using `-b BBWT`).
 
 - **Additional**:  
   Two files storing the (Generalized) Conjugate Array and the Document array in binary format (4 or 8 bytes per entry, using `./cais` and `./cais64`, respectively): 
-  - `.gca`: the Generalized Conjugate Array of the input collection (using `-c`). When the `-d` flag is not set, the indexes are given w.r.t. the concatenation of the input strings.
+  - `.gca`: the Generalized Conjugate Array of the input collection (using `-c`). When the `-d` flag is not set, the indexes are given w.r.t. the concatenation of the input strings. Conjugates of power words are ordered by the exponent of their root, then by input order.
   - `.ca`: the Conjugate Array of one input text (using `-c`).
-  - `.da`: the Document Array for the GCA (using `-d` and `-c` togheter).
+  - `.da`: the Document Array for the GCA (using `-d` and `-c` together).
 
 # External resources
 

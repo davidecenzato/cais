@@ -33,9 +33,9 @@ void print_help(char** argv) {
         << "\t    \tdolEBWT: the eBWT where each string is terminated with a dollar " << std::endl
         << "\t    \tBWT: the BWT of a string without the terminating dollar " << std::endl
         << "\t    \tBBWT: the original Bijective BWT of Gil and Scott " << std::endl
-        << "\t-o O\tbasename for the output files, def. <output filename>" << std::endl
+        << "\t-o O\tbasename for the output files, def. <input filename>" << std::endl
         << "\t-i I\tselect the input format (FASTA|FASTQ|plain_text) " << std::endl
-        << "\t-p  \trun the algorithm variant for datasets of primitive strings, def. False " << std::endl 
+        << "\t-p  \trun the algorithm variant for datasets of primitive strings only, def. False " << std::endl 
         << "\t-u  \tuse an uncompressed bitvector to represent string boundaries, def. False " << std::endl 
         << "\t-c  \twrite the conjugate array, def. False " << std::endl
         << "\t-d  \twrite the document array (only for eBWT and dolEBWT), def. False " << std::endl 
